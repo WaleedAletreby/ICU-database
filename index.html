@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ICU Admin Database</title>
+<style>
+:root {
+  --bg: #f4f6f9;
+  --surface: #ffffff;
+  --surface2: #f0f2f5;
+  --border: #e0e4eb;
+  --border2: #c8cdd7;
+  --text: #1a1d23;
+  --text2: #5a6170;
+  --text3: #8a919f;
+  --blue: #2563eb;
+  --blue-bg: #eff4ff;
+  --blue-text: #1d4ed8;
+  --red: #dc2626;
+  --red-bg: #fff1f1;
+  --red-text: #b91c1c;
+  --green: #16a34a;
+  --green-bg: #f0fdf4;
+  --green-text: #15803d;
+  --amber: #d97706;
+  --amber-bg: #fffbeb;
+  --amber-text: #b45309;
+  --radius: 8px;
+  --radius-lg: 12px;
+  --shadow: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.05);
+  --shadow-md: 0 4px 12px rgba(0,0,0,.1);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,sans-serif;font-size:14px;background:var(--bg);color:var(--text);min-height:100vh}
+
+/* ---- LOGIN ---- */
+.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1e3a5f 0%,#2563eb 100%)}
+.login-card{background:var(--surface);border-radius:var(--radius-lg);padding:2.5rem 2rem;width:340px;box-shadow:var(--shadow-md);text-align:center}
+.login-logo{width:56px;height:56px;background:var(--red-bg);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 1.25rem;font-size:26px}
+.login-card h1{font-size:20px;font-weight:600;margin-bottom:4px}
+.login-card p{font-size:13px;color:var(--text2);margin-bottom:1.5rem}
+.login-card input{width:100%;padding:11px 14px;border:1px solid var(--border);border-radius:var(--radius);font-size:18px;text-align:center;letter-spacing:6px;margin-bottom:12px;background:var(--surface2);color:var(--text)}
+.login-card input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.15)}
+.btn-login{width:100%;padding:11px;background:var(--blue);color:#fff;border:none;border-radius:var(--radius);font-size:14px;font-weight:600;cursor:pointer;letter-spacing:.3px}
+.btn-login:hover{background:#1d4ed8}
+.login-err{color:var(--red);font-size:12px;margin-top:6px;min-height:18px}
+.backend-row{margin-top:1.25rem;padding-top:1.25rem;border-top:1px solid var(--border)}
+.backend-row label{font-size:11px;color:var(--text3);display:block;margin-bottom:4px}
+.backend-row input{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius);font-size:11px;background:var(--surface2);color:var(--text);letter-spacing:0}
+
+/* ---- LAYOUT ---- */
+#mainApp{display:none;flex-direction:column;min-height:100vh}
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 20px;display:flex;align-items:center;justify-content:space-between;height:56px;box-shadow:var(--shadow)}
+.topbar-left{display:flex;align-items:center;gap:12px}
+.topbar-logo{width:32px;height:32px;background:var(--red-bg);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px}
+.topbar h1{font-size:16px;font-weight:600}
+.badge{padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:.5px}
+.badge-admin{background:var(--red-bg);color:var(--red-text)}
+.topbar-right{display:flex;align-items:center;gap:8px}
+.btn{padding:7px 14px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);color:var(--text);font-size:13px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-weight:500;transition:all .15s}
+.btn:hover{background:var(--surface2);border-color:var(--border2)}
+.btn-primary{background:var(--blue);color:#fff;border-color:var(--blue)}
+.btn-primary:hover{background:#1d4ed8;border-color:#1d4ed8}
+.btn-sm{padding:5px 10px;font-size:12px}
+.btn-icon{padding:6px 8px;min-width:0}
+
+/* ---- TABS ---- */
+.tabs{background:var(--surface);border-bottom:1px solid var(--border);padding:0 20px;display:flex;gap:4px}
+.tab{padding:12px 16px;font-size:13px;font-weight:500;cursor:pointer;color:var(--text2);border-bottom:2px solid transparent;transition:all .15s;display:flex;align-items:center;gap:6px}
+.tab:hover{color:var(--text)}
+.tab.active{color:var(--blue);border-bottom-color:var(--blue)}
+
+/* ---- CONTENT ---- */
+.content{padding:20px;flex:1}
+.toolbar{display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.search-box{flex:1;min-width:200px;padding:8px 12px 8px 36px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;background:var(--surface);color:var(--text);position:relative}
+.search-wrap{position:relative;flex:1;min-width:200px}
+.search-wrap svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text3);pointer-events:none}
+.search-wrap input{width:100%;padding:8px 12px 8px 34px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;background:var(--surface);color:var(--text)}
+.search-wrap input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.1)}
+select.filter-sel{padding:7px 10px;border:1px solid var(--border);border-radius:var(--radius);font-size:12px;background:var(--surface);color:var(--text);cursor:pointer;max-width:150px}
+select.filter-sel:focus{outline:none;border-color:var(--blue)}
+
+/* ---- TABLE ---- */
+.table-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow)}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+thead{background:var(--surface2)}
+th{padding:10px 12px;text-align:left;font-weight:600;font-size:11px;color:var(--text2);white-space:nowrap;cursor:pointer;user-select:none;border-bottom:1px solid var(--border);letter-spacing:.3px;text-transform:uppercase}
+th:hover{color:var(--text)}
+td{padding:9px 12px;border-bottom:1px solid var(--border);vertical-align:middle;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#fafbfc}
+.file-no{font-weight:600;color:var(--blue-text);font-family:monospace;font-size:12px}
+
+/* ---- BADGES ---- */
+.sb{padding:3px 8px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap}
+.sb-active{background:var(--amber-bg);color:var(--amber-text)}
+.sb-death{background:var(--red-bg);color:var(--red-text)}
+.sb-home{background:var(--green-bg);color:var(--green-text)}
+.sb-dnr{background:var(--red-bg);color:var(--red-text)}
+.sb-dama{background:#fff7ed;color:#c2410c}
+.sb-ward{background:var(--blue-bg);color:var(--blue-text)}
+.sb-other{background:var(--surface2);color:var(--text2)}
+.sb-absconded{background:#fdf4ff;color:#7e22ce}
+.days-active{color:var(--amber);font-weight:600}
+.days-los{color:var(--text2)}
+
+/* ---- ACTION BTNS ---- */
+.row-actions{display:flex;gap:4px}
+.row-actions button{padding:4px 8px;font-size:11px;border:1px solid var(--border);border-radius:6px;background:transparent;cursor:pointer;color:var(--text2);transition:all .12s;line-height:1.4}
+.row-actions button:hover{background:var(--surface2);color:var(--text)}
+.row-actions .del-btn:hover{background:var(--red-bg);color:var(--red-text);border-color:var(--red)}
+
+/* ---- MODAL ---- */
+.overlay{display:none;position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:200;align-items:flex-start;justify-content:center;padding:24px;overflow-y:auto}
+.overlay.open{display:flex}
+.modal{background:var(--surface);border-radius:var(--radius-lg);width:100%;max-width:700px;margin:auto;box-shadow:var(--shadow-md);border:1px solid var(--border)}
+.modal-hdr{padding:18px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.modal-hdr h2{font-size:16px;font-weight:600}
+.modal-close{background:none;border:none;font-size:22px;cursor:pointer;color:var(--text2);line-height:1;padding:0 4px}
+.modal-close:hover{color:var(--text)}
+.modal-body{padding:22px;display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.field{display:flex;flex-direction:column;gap:5px}
+.field.full{grid-column:1/-1}
+.field label{font-size:11px;font-weight:600;color:var(--text2);letter-spacing:.3px;text-transform:uppercase}
+.field input,.field select,.field textarea{padding:9px 11px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;background:var(--surface2);color:var(--text);width:100%;transition:border-color .15s}
+.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--blue);background:var(--surface);box-shadow:0 0 0 3px rgba(37,99,235,.1)}
+.field textarea{resize:vertical;min-height:70px}
+.field-hint{font-size:11px;color:var(--text3)}
+.field-err{font-size:11px;color:var(--red)}
+.modal-ftr{padding:14px 22px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px}
+.section-divider{grid-column:1/-1;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--text3);padding-bottom:4px;border-bottom:1px solid var(--border);margin-top:4px}
+
+/* ---- CONFIRM MODAL ---- */
+.confirm-box{background:var(--surface);border-radius:var(--radius-lg);padding:28px;max-width:380px;margin:auto;border:1px solid var(--border);box-shadow:var(--shadow-md)}
+
+/* ---- PAGINATION ---- */
+.pager{display:flex;align-items:center;gap:6px;margin-top:14px;justify-content:flex-end}
+.pager button{padding:5px 11px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);cursor:pointer;font-size:12px;color:var(--text2)}
+.pager button:hover{background:var(--surface2)}
+.pager button.cur{background:var(--blue);color:#fff;border-color:var(--blue)}
+.pager-info{font-size:12px;color:var(--text3);margin-right:auto}
+
+/* ---- REPORTS ---- */
+.metrics-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-bottom:24px}
+.metric{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px;box-shadow:var(--shadow)}
+.metric .m-label{font-size:11px;font-weight:600;letter-spacing:.4px;text-transform:uppercase;color:var(--text3);margin-bottom:6px}
+.metric .m-val{font-size:26px;font-weight:700}
+.chart-section{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px;box-shadow:var(--shadow)}
+.charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.chart-title{font-size:12px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--text2);margin-bottom:12px}
+.bar-row{display:flex;align-items:center;gap:8px;margin-bottom:7px;font-size:12px}
+.bar-lbl{width:100px;color:var(--text2);text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:11px}
+.bar-track{flex:1;height:14px;background:var(--surface2);border-radius:4px;overflow:hidden}
+.bar-fill{height:100%;background:var(--blue);border-radius:4px;transition:width .4s}
+.bar-n{width:24px;color:var(--text3);font-size:11px}
+
+/* ---- LOADING ---- */
+.loading-overlay{display:none;position:fixed;inset:0;background:rgba(255,255,255,.7);z-index:300;align-items:center;justify-content:center;flex-direction:column;gap:12px}
+.loading-overlay.show{display:flex}
+.spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.toast{position:fixed;bottom:24px;right:24px;background:var(--text);color:#fff;padding:10px 18px;border-radius:var(--radius);font-size:13px;z-index:400;opacity:0;transform:translateY(8px);transition:all .25s;pointer-events:none}
+.toast.show{opacity:1;transform:translateY(0)}
+.toast.err{background:var(--red)}
+.empty-msg{text-align:center;padding:48px;color:var(--text3);font-size:13px}
+</style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="spinner"></div>
+  <div style="font-size:13px;color:var(--text2)" id="loadingMsg">Loading…</div>
+</div>
+<div class="toast" id="toast"></div>
+
+<!-- LOGIN -->
+<div class="login-wrap" id="loginScreen">
+  <div class="login-card">
+    <div class="login-logo">🏥</div>
+    <h1>ICU Admin Database</h1>
+    <p>Authorized personnel only</p>
+    <input type="password" id="pwInput" placeholder="••••" maxlength="10"
+      onkeydown="if(event.key==='Enter')doLogin()" autocomplete="off" />
+    <div class="login-err" id="loginErr"></div>
+    <button class="btn-login" onclick="doLogin()">Sign in</button>
+    <div class="backend-row">
+      <label>Google Apps Script URL (paste once, saved automatically)</label>
+      <input type="text" id="backendUrl" placeholder="https://script.google.com/macros/s/.../exec"
+        oninput="saveBackendUrl()" />
+    </div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="mainApp">
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-logo">🏥</div>
+      <h1>ICU Admin Database</h1>
+      <span class="badge badge-admin">ADMIN</span>
+    </div>
+    <div class="topbar-right">
+      <button class="btn btn-primary" onclick="openAddModal()">＋ Add Patient</button>
+      <button class="btn" onclick="loadPatients()" title="Refresh from sheet">↻ Refresh</button>
+      <button class="btn" onclick="doLogout()">Sign out</button>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" id="tab-patients" onclick="switchTab('patients')">🧑‍⚕️ Patients</div>
+    <div class="tab" id="tab-reports" onclick="switchTab('reports')">📊 Reports</div>
+  </div>
+
+  <div class="content" id="patientsTab">
+    <div class="toolbar">
+      <div class="search-wrap">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" placeholder="Search file #, name, diagnosis, specialty…" id="searchInput" oninput="renderTable()" />
+      </div>
+      <select class="filter-sel" id="fArea" onchange="renderTable()">
+        <option value="">All areas</option>
+        <option>Trauma</option><option>Burn</option><option>400H</option>
+        <option>T1A1</option><option>T1B1</option><option>T1A2</option><option>SDU</option>
+      </select>
+      <select class="filter-sel" id="fType" onchange="renderTable()">
+        <option value="">All types</option>
+        <option>FT</option><option>Maternity</option><option>Medical</option>
+        <option>Surgical</option><option>Trauma</option>
+      </select>
+      <select class="filter-sel" id="fStatus" onchange="renderTable()">
+        <option value="">All statuses</option>
+        <option value="active">Active (not discharged)</option>
+        <option>Death</option><option>DNR</option><option>Home</option>
+        <option>DAMA</option><option>Absconded</option><option>Ward</option>
+        <option>Other hospital</option>
+      </select>
+      <select class="filter-sel" id="fSex" onchange="renderTable()">
+        <option value="">All genders</option><option>Male</option><option>Female</option>
+      </select>
+      <button class="btn btn-sm" onclick="clearFilters()">✕ Clear</button>
+      <button class="btn btn-sm" onclick="exportCSV()">↓ Export CSV</button>
+    </div>
+    <div class="table-card">
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th onclick="sortBy('fileNo')">File # ↕</th>
+              <th onclick="sortBy('name')">Name ↕</th>
+              <th>Age</th><th>Sex</th>
+              <th onclick="sortBy('doa')">DOA ↕</th>
+              <th>Area</th><th>Adm. Type</th><th>Adm. From</th>
+              <th>Specialty</th><th>Diagnosis</th>
+              <th>Mortality%</th>
+              <th>Days / LOS</th>
+              <th onclick="sortBy('dod')">DOD ↕</th>
+              <th>Discharge Status</th>
+              <th>Other Hospital</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px">
+      <div class="pager-info" id="rowCount"></div>
+      <div class="pager" id="pagination"></div>
+    </div>
+  </div>
+
+  <div class="content" id="reportsTab" style="display:none">
+    <div id="reportContent"></div>
+  </div>
+</div>
+
+<!-- PATIENT FORM MODAL -->
+<div class="overlay" id="formModal">
+  <div class="modal">
+    <div class="modal-hdr">
+      <h2 id="modalTitle">Add patient</h2>
+      <button class="modal-close" onclick="closeModal()">&times;</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-ftr">
+      <button class="btn" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="savePatient()" id="saveBtn">Add patient</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM DELETE MODAL -->
+<div class="overlay" id="confirmModal">
+  <div class="confirm-box">
+    <p style="font-size:16px;font-weight:600;margin-bottom:8px">Delete patient record?</p>
+    <p style="font-size:13px;color:var(--text2);margin-bottom:22px">This action cannot be undone. The record will be permanently removed from the shared database.</p>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn" onclick="closeConfirm()">Cancel</button>
+      <button class="btn" style="background:var(--red);color:#fff;border-color:var(--red)" id="confirmDeleteBtn">Yes, delete</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const PASS = "1406";
+const SPECIALTIES = ["Anesthesia","Burn Surgery","Cardiac Surgery","Cardiology","Dermatology",
+  "Emergency Medicine","Endocrinology","ENT","Gastroenterology","General Surgery","Gynecology",
+  "Hematology","Hepatology","Infectious Disease","Internal Medicine","Neonatology","Nephrology",
+  "Neurology","Neurosurgery","Obstetrics","Oncology","Ophthalmology",
+  "Oral & Maxillofacial Surgery","Orthopedic Surgery","Pediatrics","Pediatric Surgery",
+  "Plastic Surgery","Pulmonology","Psychiatry","Radiology","Rheumatology",
+  "Thoracic Surgery","Trauma Surgery","Urology","Vascular Surgery"];
+
+let patients = [];
+let sortKey = 'doa', sortDir = -1, page = 1;
+const PER_PAGE = 20;
+
+// ---------- BACKEND ----------
+function getUrl() { return (document.getElementById('backendUrl').value||'').trim() || localStorage.getItem('icuBackendUrl')||''; }
+function saveBackendUrl() { localStorage.setItem('icuBackendUrl', document.getElementById('backendUrl').value.trim()); }
+
+async function api(payload) {
+  const url = getUrl();
+  if (!url) { showToast('Please enter the Google Apps Script URL first.', true); throw new Error('No URL'); }
+  const res = await fetch(url, {
+    method: 'POST',
+    body: JSON.stringify({ password: PASS, ...payload })
+  });
+  const data = await res.json();
+  if (!data.ok) throw new Error(data.error || 'API error');
+  return data;
+}
+
+// ---------- AUTH ----------
+function doLogin() {
+  const v = document.getElementById('pwInput').value;
+  if (v !== PASS) { document.getElementById('loginErr').textContent = 'Incorrect password.'; document.getElementById('pwInput').value=''; return; }
+  const saved = localStorage.getItem('icuBackendUrl');
+  if (saved) document.getElementById('backendUrl').value = saved;
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('mainApp').style.display = 'flex';
+  document.getElementById('mainApp').style.flexDirection = 'column';
+  loadPatients();
+}
+function doLogout() {
+  document.getElementById('mainApp').style.display = 'none';
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('pwInput').value = '';
+  document.getElementById('loginErr').textContent = '';
+  patients = [];
+}
+
+// ---------- DATA ----------
+async function loadPatients() {
+  showLoading('Loading patients from Google Sheet…');
+  try {
+    const res = await api({ action: 'getAll' });
+    patients = res.data || [];
+    renderTable(); renderReport();
+    showToast('Data refreshed ✓');
+  } catch(e) {
+    if (e.message !== 'No URL') showToast('Error loading data: ' + e.message, true);
+  } finally { hideLoading(); }
+}
+
+// ---------- TABLE ----------
+function daysBetween(d1, d2) { return Math.floor((new Date(d2) - new Date(d1)) / 86400000); }
+function today() { return new Date().toISOString().slice(0, 10); }
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function getFiltered() {
+  const q = (document.getElementById('searchInput').value||'').toLowerCase();
+  const fA = document.getElementById('fArea').value;
+  const fT = document.getElementById('fType').value;
+  const fS = document.getElementById('fStatus').value;
+  const fX = document.getElementById('fSex').value;
+  return patients.filter(p => {
+    if (q && ![p.fileNo,p.name,p.diagnosis,p.specialty].join(' ').toLowerCase().includes(q)) return false;
+    if (fA && p.area !== fA) return false;
+    if (fT && p.admType !== fT) return false;
+    if (fX && p.sex !== fX) return false;
+    if (fS) { if (fS === 'active') return !p.dischargeStatus; if (p.dischargeStatus !== fS) return false; }
+    return true;
+  }).sort((a, b) => {
+    let av = a[sortKey]||'', bv = b[sortKey]||'';
+    return av < bv ? -sortDir : av > bv ? sortDir : 0;
+  });
+}
+
+function sortBy(k) { sortKey === k ? sortDir *= -1 : (sortKey = k, sortDir = 1); renderTable(); }
+function clearFilters() { ['searchInput','fArea','fType','fStatus','fSex'].forEach(id => document.getElementById(id).value=''); renderTable(); }
+
+function renderTable() { page = 1; renderPage(getFiltered()); }
+
+function renderPage(data) {
+  const total = data.length;
+  const pages = Math.max(1, Math.ceil(total / PER_PAGE));
+  if (page > pages) page = pages;
+  const slice = data.slice((page-1)*PER_PAGE, page*PER_PAGE);
+  const tbody = document.getElementById('tableBody');
+
+  if (!slice.length) {
+    tbody.innerHTML = `<tr><td colspan="16" class="empty-msg">No patients found</td></tr>`;
+    document.getElementById('rowCount').textContent = '';
+    document.getElementById('pagination').innerHTML = '';
+    return;
+  }
+
+  tbody.innerHTML = slice.map(p => {
+    const dis = !!p.dischargeStatus;
+    let daysCell = '—';
+    if (!dis && p.doa) {
+      const d = daysBetween(p.doa, today());
+      daysCell = `<span class="days-active">${d}d</span>`;
+    } else if (dis && p.doa && p.dod) {
+      daysCell = `<span class="days-los">${daysBetween(p.doa, p.dod)}d LOS</span>`;
+    }
+    const sbMap = {Death:'sb-death',DNR:'sb-dnr',Home:'sb-home',DAMA:'sb-dama',Ward:'sb-ward','Other hospital':'sb-other',Absconded:'sb-absconded'};
+    const sbClass = sbMap[p.dischargeStatus] || 'sb-active';
+    const sbLabel = p.dischargeStatus || 'Active';
+    return `<tr>
+      <td><span class="file-no">${esc(p.fileNo)}</span></td>
+      <td title="${esc(p.name)}">${esc(p.name)}</td>
+      <td>${p.age||''}</td>
+      <td>${p.sex||''}</td>
+      <td>${p.doa||''}</td>
+      <td>${p.area||''}</td>
+      <td>${p.admType||''}</td>
+      <td>${p.admFrom||''}</td>
+      <td title="${esc(p.specialty||'')}">${esc((p.specialty||'').slice(0,18)+(p.specialty&&p.specialty.length>18?'…':''))}</td>
+      <td title="${esc(p.diagnosis||'')}">${esc((p.diagnosis||'').slice(0,25)+(p.diagnosis&&p.diagnosis.length>25?'…':''))}</td>
+      <td>${p.mortality||''}</td>
+      <td>${daysCell}</td>
+      <td>${p.dod||''}</td>
+      <td><span class="sb ${sbClass}">${sbLabel}</span></td>
+      <td>${esc(p.otherHospital||'')}</td>
+      <td><div class="row-actions">
+        <button onclick="openEditModal('${p.id}')">✏️ Edit</button>
+        <button class="del-btn" onclick="confirmDelete('${p.id}')">🗑️ Del</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('rowCount').textContent = `Showing ${(page-1)*PER_PAGE+1}–${Math.min(page*PER_PAGE,total)} of ${total} patient(s)`;
+
+  let pg = '';
+  if (pages > 1) {
+    pg += `<button onclick="goPage(${Math.max(1,page-1)})">‹</button>`;
+    for (let i = 1; i <= pages; i++) pg += `<button class="${i===page?'cur':''}" onclick="goPage(${i})">${i}</button>`;
+    pg += `<button onclick="goPage(${Math.min(pages,page+1)})">›</button>`;
+  }
+  document.getElementById('pagination').innerHTML = pg;
+}
+
+function goPage(p) { page = p; renderPage(getFiltered()); }
+
+// ---------- FORM ----------
+function buildForm(p) {
+  const o = (v, lbl, sel) => `<option value="${v}"${sel==v?' selected':''}>${lbl||v}</option>`;
+  const areas = ['Trauma','Burn','400H','T1A1','T1B1','T1A2','SDU'];
+  const types = ['FT','Maternity','Medical','Surgical','Trauma'];
+  const froms = ['ER','Ward','ER to OR','Ward to OR','ER to Cath','Ward to Cath','Fax to ER','Fax to Cath','Life Saving'];
+  const statuses = ['Death','DNR','Home','DAMA','Absconded','Ward','Other hospital'];
+  const v = k => esc((p&&p[k])||'');
+  const sel = (name, opts, val) => `<select name="${name}"><option value="">— select —</option>${opts.map(x=>o(x,x,val)).join('')}</select>`;
+
+  return `
+  <div class="section-divider">Patient identification</div>
+  <div class="field">
+    <label>File number *</label>
+    <input type="text" name="fileNo" value="${v('fileNo')}" placeholder="e.g. 202400001" />
+    <span class="field-hint">Must be unique — used as the primary key</span>
+  </div>
+  <div class="field">
+    <label>Full name *</label>
+    <input type="text" name="name" value="${v('name')}" placeholder="Patient full name" />
+  </div>
+  <div class="field">
+    <label>Age</label>
+    <input type="number" name="age" value="${v('age')}" min="0" max="150" placeholder="Years" />
+  </div>
+  <div class="field">
+    <label>Sex</label>
+    <select name="sex"><option value="">—</option>
+      <option${p&&p.sex==='Male'?' selected':''}>Male</option>
+      <option${p&&p.sex==='Female'?' selected':''}>Female</option>
+    </select>
+  </div>
+
+  <div class="section-divider">Admission details</div>
+  <div class="field">
+    <label>Date of admission *</label>
+    <input type="date" name="doa" value="${v('doa')}" />
+  </div>
+  <div class="field">
+    <label>Admission area *</label>${sel('area', areas, p&&p.area)}
+  </div>
+  <div class="field">
+    <label>Admission type *</label>${sel('admType', types, p&&p.admType)}
+  </div>
+  <div class="field">
+    <label>Admitted from *</label>${sel('admFrom', froms, p&&p.admFrom)}
+  </div>
+  <div class="field full">
+    <label>Admitting specialty</label>
+    <select name="specialty"><option value="">— select —</option>${SPECIALTIES.map(s=>`<option${p&&p.specialty===s?' selected':''}>${s}</option>`).join('')}</select>
+  </div>
+  <div class="field full">
+    <label>Diagnosis</label>
+    <textarea name="diagnosis">${esc((p&&p.diagnosis)||'')}</textarea>
+  </div>
+  <div class="field">
+    <label>Predicted mortality (%)</label>
+    <input type="number" name="mortality" value="${v('mortality')}" min="0" max="100" placeholder="0–100" />
+  </div>
+
+  <div class="section-divider">Discharge details</div>
+  <div class="field">
+    <label>Date of discharge</label>
+    <input type="date" name="dod" value="${v('dod')}" />
+  </div>
+  <div class="field">
+    <label>Discharge status</label>
+    <select name="dischargeStatus" onchange="toggleOtherHosp(this)">
+      <option value="">Active / not discharged</option>
+      ${statuses.map(s=>`<option value="${s}"${p&&p.dischargeStatus===s?' selected':''}>${s}</option>`).join('')}
+    </select>
+  </div>
+  <div class="field full" id="otherHospField" style="display:${p&&p.dischargeStatus==='Other hospital'?'flex':'none'}">
+    <label>Other hospital name</label>
+    <input type="text" name="otherHospital" value="${v('otherHospital')}" placeholder="Hospital name" />
+  </div>`;
+}
+
+function toggleOtherHosp(s) { document.getElementById('otherHospField').style.display = s.value==='Other hospital' ? 'flex' : 'none'; }
+
+let editingId = null;
+function openAddModal() {
+  editingId = null;
+  document.getElementById('modalTitle').textContent = 'Add patient';
+  document.getElementById('saveBtn').textContent = 'Add patient';
+  document.getElementById('modalBody').innerHTML = buildForm(null);
+  document.getElementById('formModal').classList.add('open');
+}
+function openEditModal(id) {
+  editingId = id;
+  const p = patients.find(x => x.id === id);
+  if (!p) return;
+  document.getElementById('modalTitle').textContent = 'Edit patient';
+  document.getElementById('saveBtn').textContent = 'Save changes';
+  document.getElementById('modalBody').innerHTML = buildForm(p);
+  document.getElementById('formModal').classList.add('open');
+}
+function closeModal() { document.getElementById('formModal').classList.remove('open'); }
+
+async function savePatient() {
+  const body = document.getElementById('modalBody');
+  const get = n => { const el = body.querySelector(`[name="${n}"]`); return el ? el.value.trim() : ''; };
+  const fileNo = get('fileNo');
+  if (!fileNo) { showToast('File number is required.', true); return; }
+  if (!get('name')) { showToast('Patient name is required.', true); return; }
+  if (!get('doa')) { showToast('Date of admission is required.', true); return; }
+  const dup = patients.find(p => p.fileNo === fileNo && p.id !== editingId);
+  if (dup) { showToast('File number already exists — must be unique.', true); return; }
+
+  const rec = { id: editingId||'', fileNo, name:get('name'), age:get('age'), sex:get('sex'),
+    doa:get('doa'), area:get('area'), admType:get('admType'), admFrom:get('admFrom'),
+    specialty:get('specialty'), diagnosis:get('diagnosis'), mortality:get('mortality'),
+    dod:get('dod'), dischargeStatus:get('dischargeStatus'), otherHospital:get('otherHospital') };
+
+  closeModal();
+  showLoading(editingId ? 'Saving changes…' : 'Adding patient…');
+  try {
+    if (editingId) {
+      await api({ action: 'update', row: rec });
+      const i = patients.findIndex(p => p.id === editingId);
+      patients[i] = rec;
+      showToast('Patient updated ✓');
+    } else {
+      const res = await api({ action: 'add', row: rec });
+      rec.id = res.id;
+      patients.push(rec);
+      showToast('Patient added ✓');
+    }
+    renderTable(); renderReport();
+  } catch(e) { showToast('Error: ' + e.message, true); }
+  finally { hideLoading(); }
+}
+
+// ---------- DELETE ----------
+let deleteTarget = null;
+function confirmDelete(id) {
+  deleteTarget = id;
+  document.getElementById('confirmModal').classList.add('open');
+  document.getElementById('confirmDeleteBtn').onclick = async () => {
+    closeConfirm();
+    showLoading('Deleting…');
+    try {
+      await api({ action: 'delete', id: deleteTarget });
+      patients = patients.filter(p => p.id !== deleteTarget);
+      renderTable(); renderReport();
+      showToast('Patient deleted');
+    } catch(e) { showToast('Error: ' + e.message, true); }
+    finally { hideLoading(); }
+  };
+}
+function closeConfirm() { document.getElementById('confirmModal').classList.remove('open'); deleteTarget = null; }
+
+// ---------- REPORTS ----------
+function switchTab(t) {
+  ['patients','reports'].forEach(x => {
+    document.getElementById(x+'Tab').style.display = x===t ? 'block' : 'none';
+    document.getElementById('tab-'+x).className = 'tab' + (x===t ? ' active' : '');
+  });
+  if (t === 'reports') renderReport();
+}
+
+function renderReport() {
+  const el = document.getElementById('reportContent');
+  if (!el) return;
+  const total = patients.length;
+  if (!total) { el.innerHTML = '<div class="empty-msg">No patients in the database yet.</div>'; return; }
+  const active = patients.filter(p => !p.dischargeStatus).length;
+  const deaths = patients.filter(p => p.dischargeStatus === 'Death').length;
+  const losVals = patients.filter(p => p.doa && p.dod).map(p => daysBetween(p.doa, p.dod));
+  const avgLos = losVals.length ? Math.round(losVals.reduce((a,b)=>a+b,0)/losVals.length) : 0;
+  const countBy = key => { const m={}; patients.forEach(p=>{ const v=p[key]||'Unknown'; m[v]=(m[v]||0)+1; }); return Object.entries(m).sort((a,b)=>b[1]-a[1]); };
+  const bars = (entries) => entries.slice(0,8).map(([k,v])=>`
+    <div class="bar-row">
+      <div class="bar-lbl" title="${esc(k)}">${esc(k)}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${total?Math.round(v/total*100):0}%"></div></div>
+      <div class="bar-n">${v}</div>
+    </div>`).join('');
+
+  el.innerHTML = `
+  <div class="metrics-grid">
+    <div class="metric"><div class="m-label">Total patients</div><div class="m-val">${total}</div></div>
+    <div class="metric"><div class="m-label">Currently active</div><div class="m-val" style="color:var(--amber)">${active}</div></div>
+    <div class="metric"><div class="m-label">Discharged</div><div class="m-val">${total-active}</div></div>
+    <div class="metric"><div class="m-label">Deaths</div><div class="m-val" style="color:var(--red)">${deaths}</div></div>
+    <div class="metric"><div class="m-label">Mortality rate</div><div class="m-val">${Math.round(deaths/total*100)}%</div></div>
+    <div class="metric"><div class="m-label">Avg LOS (days)</div><div class="m-val">${avgLos}</div></div>
+  </div>
+  <div class="charts-grid">
+    <div class="chart-section"><div class="chart-title">By admission area</div>${bars(countBy('area'))}</div>
+    <div class="chart-section"><div class="chart-title">By discharge status</div>${bars(countBy('dischargeStatus'))}</div>
+    <div class="chart-section"><div class="chart-title">By admission type</div>${bars(countBy('admType'))}</div>
+    <div class="chart-section"><div class="chart-title">By admitted from</div>${bars(countBy('admFrom'))}</div>
+    <div class="chart-section"><div class="chart-title">By specialty (top 8)</div>${bars(countBy('specialty'))}</div>
+    <div class="chart-section"><div class="chart-title">By sex</div>${bars(countBy('sex'))}</div>
+  </div>
+  <div class="chart-section" style="margin-top:0">
+    <div class="chart-title" style="margin-bottom:12px">Active patients — live days in ICU</div>
+    ${patients.filter(p=>!p.dischargeStatus&&p.doa).length ?
+      `<table style="width:100%;font-size:12.5px;border-collapse:collapse">
+        <thead><tr>
+          <th style="text-align:left;padding:6px 10px;background:var(--surface2);font-size:11px;font-weight:700;color:var(--text2);border-bottom:1px solid var(--border)">File #</th>
+          <th style="text-align:left;padding:6px 10px;background:var(--surface2);font-size:11px;font-weight:700;color:var(--text2);border-bottom:1px solid var(--border)">Name</th>
+          <th style="text-align:left;padding:6px 10px;background:var(--surface2);font-size:11px;font-weight:700;color:var(--text2);border-bottom:1px solid var(--border)">DOA</th>
+          <th style="text-align:left;padding:6px 10px;background:var(--surface2);font-size:11px;font-weight:700;color:var(--text2);border-bottom:1px solid var(--border)">Area</th>
+          <th style="text-align:left;padding:6px 10px;background:var(--surface2);font-size:11px;font-weight:700;color:var(--text2);border-bottom:1px solid var(--border)">Days in ICU</th>
+        </tr></thead>
+        <tbody>${patients.filter(p=>!p.dischargeStatus&&p.doa).sort((a,b)=>daysBetween(b.doa,today())-daysBetween(a.doa,today())).map(p=>`
+          <tr>
+            <td style="padding:7px 10px;border-bottom:1px solid var(--border);font-weight:600;color:var(--blue-text);font-family:monospace">${esc(p.fileNo)}</td>
+            <td style="padding:7px 10px;border-bottom:1px solid var(--border)">${esc(p.name)}</td>
+            <td style="padding:7px 10px;border-bottom:1px solid var(--border)">${p.doa}</td>
+            <td style="padding:7px 10px;border-bottom:1px solid var(--border)">${p.area||''}</td>
+            <td style="padding:7px 10px;border-bottom:1px solid var(--border)"><span class="days-active">${daysBetween(p.doa,today())}d</span></td>
+          </tr>`).join('')}
+        </tbody>
+      </table>` : '<div style="color:var(--text3);font-size:13px">No active patients.</div>'}
+  </div>`;
+}
+
+// ---------- EXPORT ----------
+function exportCSV() {
+  const data = getFiltered();
+  if (!data.length) { showToast('No data to export.', true); return; }
+  const hdr = ['File No','Name','Age','Sex','DOA','Area','Adm Type','Adm From','Specialty','Diagnosis','Mortality%','Days/LOS','DOD','Discharge Status','Other Hospital'];
+  const rows = data.map(p => {
+    let dl = '';
+    if (!p.dischargeStatus && p.doa) dl = daysBetween(p.doa,today())+'d active';
+    else if (p.doa && p.dod) dl = daysBetween(p.doa,p.dod)+'d LOS';
+    return [p.fileNo,p.name,p.age,p.sex,p.doa,p.area,p.admType,p.admFrom,p.specialty,p.diagnosis,p.mortality,dl,p.dod,p.dischargeStatus||'Active',p.otherHospital].map(v=>'"'+String(v||'').replace(/"/g,'""')+'"').join(',');
+  });
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent([hdr.join(','),...rows].join('\n'));
+  a.download = 'ICU_patients_' + today() + '.csv';
+  a.click();
+}
+
+// ---------- UI HELPERS ----------
+function showLoading(msg) { document.getElementById('loadingMsg').textContent=msg||'Loading…'; document.getElementById('loadingOverlay').classList.add('show'); }
+function hideLoading() { document.getElementById('loadingOverlay').classList.remove('show'); }
+let toastTimer;
+function showToast(msg, err) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (err?' err':'');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.className='toast', 3000);
+}
+
+// pre-fill backend URL if saved
+window.addEventListener('load', () => {
+  const saved = localStorage.getItem('icuBackendUrl');
+  if (saved) document.getElementById('backendUrl').value = saved;
+});
+</script>
+</body>
+</html>
