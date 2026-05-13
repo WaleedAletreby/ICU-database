@@ -1,716 +1,618 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ICU Admin Database</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
-:root {
-  --bg: #f4f6f9;
-  --surface: #ffffff;
-  --surface2: #f0f2f5;
-  --border: #e0e4eb;
-  --border2: #c8cdd7;
-  --text: #1a1d23;
-  --text2: #5a6170;
-  --text3: #8a919f;
-  --blue: #2563eb;
-  --blue-bg: #eff4ff;
-  --blue-text: #1d4ed8;
-  --red: #dc2626;
-  --red-bg: #fff1f1;
-  --red-text: #b91c1c;
-  --green: #16a34a;
-  --green-bg: #f0fdf4;
-  --green-text: #15803d;
-  --amber: #d97706;
-  --amber-bg: #fffbeb;
-  --amber-text: #b45309;
-  --radius: 8px;
-  --radius-lg: 12px;
-  --shadow: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.05);
-  --shadow-md: 0 4px 12px rgba(0,0,0,.1);
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f4f2ed;--surface:#fff;--surface2:#f9f8f5;
+  --border:rgba(0,0,0,0.1);--border-strong:rgba(0,0,0,0.18);
+  --text:#1a1916;--muted:#7a776e;
+  --accent:#1d4e6b;--accent2:#e8f1f6;
+  --green:#1a6644;--green-bg:#e8f5ee;
+  --red:#8b1f1f;--red-bg:#faecec;
+  --radius:12px;--radius-lg:16px;
+  --font-display:'DM Serif Display',Georgia,serif;
+  --font:'DM Sans',system-ui,sans-serif;
 }
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Segoe UI',system-ui,sans-serif;font-size:14px;background:var(--bg);color:var(--text);min-height:100vh}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;font-size:14px}
 
-/* ---- LOGIN ---- */
-.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1e3a5f 0%,#2563eb 100%)}
-.login-card{background:var(--surface);border-radius:var(--radius-lg);padding:2.5rem 2rem;width:340px;box-shadow:var(--shadow-md);text-align:center}
-.login-logo{width:56px;height:56px;background:var(--red-bg);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 1.25rem;font-size:26px}
-.login-card h1{font-size:20px;font-weight:600;margin-bottom:4px}
-.login-card p{font-size:13px;color:var(--text2);margin-bottom:1.5rem}
-.login-card input{width:100%;padding:11px 14px;border:1px solid var(--border);border-radius:var(--radius);font-size:18px;text-align:center;letter-spacing:6px;margin-bottom:12px;background:var(--surface2);color:var(--text)}
-.login-card input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.15)}
-.btn-login{width:100%;padding:11px;background:var(--blue);color:#fff;border:none;border-radius:var(--radius);font-size:14px;font-weight:600;cursor:pointer;letter-spacing:.3px}
-.btn-login:hover{background:#1d4ed8}
-.login-err{color:var(--red);font-size:12px;margin-top:6px;min-height:18px}
-.backend-row{margin-top:1.25rem;padding-top:1.25rem;border-top:1px solid var(--border)}
-.backend-row label{font-size:11px;color:var(--text3);display:block;margin-bottom:4px}
-.backend-row input{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius);font-size:11px;background:var(--surface2);color:var(--text);letter-spacing:0}
+/* HEADER */
+.header{background:var(--accent);padding:1.5rem 2rem;display:flex;align-items:center;justify-content:space-between;gap:1rem}
+.header-title{font-family:var(--font-display);font-size:1.6rem;color:#fff;display:flex;align-items:center;gap:10px}
+.header-title span{font-size:1.4rem}
+.header-right{display:flex;align-items:center;gap:10px}
+.badge-admin{background:rgba(255,255,255,0.15);color:rgba(255,255,255,0.9);font-size:11px;font-weight:600;letter-spacing:0.1em;padding:3px 10px;border-radius:100px;text-transform:uppercase}
 
-/* ---- LAYOUT ---- */
-#mainApp{display:none;flex-direction:column;min-height:100vh}
-.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 20px;display:flex;align-items:center;justify-content:space-between;height:56px;box-shadow:var(--shadow)}
-.topbar-left{display:flex;align-items:center;gap:12px}
-.topbar-logo{width:32px;height:32px;background:var(--red-bg);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px}
-.topbar h1{font-size:16px;font-weight:600}
-.badge{padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:.5px}
-.badge-admin{background:var(--red-bg);color:var(--red-text)}
-.topbar-right{display:flex;align-items:center;gap:8px}
-.btn{padding:7px 14px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);color:var(--text);font-size:13px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-weight:500;transition:all .15s}
-.btn:hover{background:var(--surface2);border-color:var(--border2)}
-.btn-primary{background:var(--blue);color:#fff;border-color:var(--blue)}
-.btn-primary:hover{background:#1d4ed8;border-color:#1d4ed8}
+/* BUTTONS */
+.btn{font-family:var(--font);font-size:13px;font-weight:500;border-radius:8px;padding:7px 14px;cursor:pointer;transition:all 0.15s;border:1px solid transparent;display:inline-flex;align-items:center;gap:6px}
+.btn-primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn-primary:hover{opacity:0.85}
+.btn-ghost{background:rgba(255,255,255,0.12);color:#fff;border-color:rgba(255,255,255,0.2)}
+.btn-ghost:hover{background:rgba(255,255,255,0.22)}
+.btn-outline{background:var(--surface);color:var(--text);border-color:var(--border-strong)}
+.btn-outline:hover{background:var(--surface2)}
+.btn-danger{background:var(--red-bg);color:var(--red);border-color:rgba(139,31,31,0.2)}
+.btn-danger:hover{background:#f5d5d5}
 .btn-sm{padding:5px 10px;font-size:12px}
-.btn-icon{padding:6px 8px;min-width:0}
+.btn-full{width:100%;justify-content:center}
 
-/* ---- TABS ---- */
-.tabs{background:var(--surface);border-bottom:1px solid var(--border);padding:0 20px;display:flex;gap:4px}
-.tab{padding:12px 16px;font-size:13px;font-weight:500;cursor:pointer;color:var(--text2);border-bottom:2px solid transparent;transition:all .15s;display:flex;align-items:center;gap:6px}
-.tab:hover{color:var(--text)}
-.tab.active{color:var(--blue);border-bottom-color:var(--blue)}
+/* LOGIN */
+.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:1rem}
+.login-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:2.5rem;width:100%;max-width:380px;text-align:center}
+.login-icon{font-size:2.5rem;margin-bottom:1rem}
+.login-card h2{font-family:var(--font-display);font-size:1.5rem;margin-bottom:0.4rem}
+.login-card p{color:var(--muted);font-size:13px;margin-bottom:1.5rem}
+.login-card input{width:100%;border:1px solid var(--border-strong);border-radius:8px;padding:9px 12px;font-size:14px;font-family:var(--font);outline:none;margin-bottom:0.75rem;transition:border-color 0.15s}
+.login-card input:focus{border-color:var(--accent)}
+.login-error{color:var(--red);font-size:12px;margin-bottom:0.75rem;display:none}
+.login-error.show{display:block}
+.script-section{margin-top:1.25rem;padding-top:1.25rem;border-top:1px solid var(--border);text-align:left}
+.script-section label{font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:5px}
+.script-section input{margin-bottom:0}
 
-/* ---- CONTENT ---- */
-.content{padding:20px;flex:1}
-.toolbar{display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap}
-.search-box{flex:1;min-width:200px;padding:8px 12px 8px 36px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;background:var(--surface);color:var(--text);position:relative}
-.search-wrap{position:relative;flex:1;min-width:200px}
-.search-wrap svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text3);pointer-events:none}
-.search-wrap input{width:100%;padding:8px 12px 8px 34px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;background:var(--surface);color:var(--text)}
-.search-wrap input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.1)}
-select.filter-sel{padding:7px 10px;border:1px solid var(--border);border-radius:var(--radius);font-size:12px;background:var(--surface);color:var(--text);cursor:pointer;max-width:150px}
-select.filter-sel:focus{outline:none;border-color:var(--blue)}
+/* MAIN LAYOUT */
+.app{display:none;flex-direction:column;min-height:100vh}
+.app.visible{display:flex}
+.toolbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0.75rem 1.5rem;display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap}
+.toolbar-sep{width:1px;height:24px;background:var(--border);margin:0 4px}
+.filter-select{border:1px solid var(--border-strong);border-radius:8px;padding:6px 10px;font-size:13px;font-family:var(--font);background:var(--surface2);color:var(--text);outline:none;cursor:pointer}
+.filter-select:focus{border-color:var(--accent)}
+.spacer{flex:1}
+.status-msg{font-size:12px;color:var(--muted);padding:0 4px}
 
-/* ---- TABLE ---- */
-.table-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow)}
-.table-wrap{overflow-x:auto}
-table{width:100%;border-collapse:collapse;font-size:12.5px}
+/* TABS */
+.tabs{display:flex;gap:2px;background:var(--surface2);border-radius:8px;padding:3px}
+.tab{padding:5px 14px;border-radius:6px;font-size:13px;font-weight:500;cursor:pointer;color:var(--muted);border:none;background:none;font-family:var(--font);transition:all 0.15s}
+.tab.active{background:var(--surface);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,0.08)}
+
+/* TABLE */
+.table-wrap{flex:1;overflow:auto;padding:1.5rem}
+table{width:100%;border-collapse:collapse;background:var(--surface);border-radius:var(--radius-lg);overflow:hidden;border:1px solid var(--border)}
 thead{background:var(--surface2)}
-th{padding:10px 12px;text-align:left;font-weight:600;font-size:11px;color:var(--text2);white-space:nowrap;cursor:pointer;user-select:none;border-bottom:1px solid var(--border);letter-spacing:.3px;text-transform:uppercase}
+th{padding:10px 12px;text-align:left;font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--border);white-space:nowrap;cursor:pointer;user-select:none}
 th:hover{color:var(--text)}
-td{padding:9px 12px;border-bottom:1px solid var(--border);vertical-align:middle;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+th .sort-icon{margin-left:4px;opacity:0.4;font-style:normal}
+th.sorted .sort-icon{opacity:1}
+td{padding:9px 12px;border-bottom:1px solid var(--border);vertical-align:middle;font-size:13px}
 tr:last-child td{border-bottom:none}
-tr:hover td{background:#fafbfc}
-.file-no{font-weight:600;color:var(--blue-text);font-family:monospace;font-size:12px}
+tr:hover td{background:var(--surface2)}
+.td-actions{display:flex;gap:6px;white-space:nowrap}
+.empty-row td{text-align:center;padding:3rem;color:var(--muted)}
 
-/* ---- BADGES ---- */
-.sb{padding:3px 8px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap}
-.sb-active{background:var(--amber-bg);color:var(--amber-text)}
-.sb-death{background:var(--red-bg);color:var(--red-text)}
-.sb-home{background:var(--green-bg);color:var(--green-text)}
-.sb-dnr{background:var(--red-bg);color:var(--red-text)}
-.sb-dama{background:#fff7ed;color:#c2410c}
-.sb-ward{background:var(--blue-bg);color:var(--blue-text)}
-.sb-other{background:var(--surface2);color:var(--text2)}
-.sb-absconded{background:#fdf4ff;color:#7e22ce}
-.days-active{color:var(--amber);font-weight:600}
-.days-los{color:var(--text2)}
+/* BADGES */
+.status-badge{display:inline-block;font-size:11px;font-weight:600;padding:3px 8px;border-radius:100px}
+.status-active{background:var(--green-bg);color:var(--green)}
+.status-death{background:var(--red-bg);color:var(--red)}
+.status-other{background:#f0ede8;color:#5a5750}
 
-/* ---- ACTION BTNS ---- */
-.row-actions{display:flex;gap:4px}
-.row-actions button{padding:4px 8px;font-size:11px;border:1px solid var(--border);border-radius:6px;background:transparent;cursor:pointer;color:var(--text2);transition:all .12s;line-height:1.4}
-.row-actions button:hover{background:var(--surface2);color:var(--text)}
-.row-actions .del-btn:hover{background:var(--red-bg);color:var(--red-text);border-color:var(--red)}
+/* REPORTS */
+.reports-wrap{padding:1.5rem;display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1rem}
+.report-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.25rem}
+.report-card-label{font-size:11px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:0.6rem}
+.report-card-value{font-family:var(--font-display);font-size:2rem;color:var(--text)}
+.report-card-sub{font-size:12px;color:var(--muted);margin-top:4px}
 
-/* ---- MODAL ---- */
-.overlay{display:none;position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:200;align-items:flex-start;justify-content:center;padding:24px;overflow-y:auto}
+/* OVERLAY / MODAL */
+.overlay{display:none;position:fixed;inset:0;background:rgba(10,15,20,0.55);backdrop-filter:blur(3px);z-index:100;align-items:center;justify-content:center;padding:1rem}
 .overlay.open{display:flex}
-.modal{background:var(--surface);border-radius:var(--radius-lg);width:100%;max-width:700px;margin:auto;box-shadow:var(--shadow-md);border:1px solid var(--border)}
-.modal-hdr{padding:18px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
-.modal-hdr h2{font-size:16px;font-weight:600}
-.modal-close{background:none;border:none;font-size:22px;cursor:pointer;color:var(--text2);line-height:1;padding:0 4px}
-.modal-close:hover{color:var(--text)}
-.modal-body{padding:22px;display:grid;grid-template-columns:1fr 1fr;gap:14px}
-.field{display:flex;flex-direction:column;gap:5px}
-.field.full{grid-column:1/-1}
-.field label{font-size:11px;font-weight:600;color:var(--text2);letter-spacing:.3px;text-transform:uppercase}
-.field input,.field select,.field textarea{padding:9px 11px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;background:var(--surface2);color:var(--text);width:100%;transition:border-color .15s}
-.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--blue);background:var(--surface);box-shadow:0 0 0 3px rgba(37,99,235,.1)}
-.field textarea{resize:vertical;min-height:70px}
-.field-hint{font-size:11px;color:var(--text3)}
-.field-err{font-size:11px;color:var(--red)}
-.modal-ftr{padding:14px 22px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px}
-.section-divider{grid-column:1/-1;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--text3);padding-bottom:4px;border-bottom:1px solid var(--border);margin-top:4px}
+.modal{background:var(--surface);border-radius:var(--radius-lg);width:100%;max-width:620px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 50px rgba(0,0,0,0.2)}
+.modal-header{padding:1.25rem 1.5rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--surface);z-index:1}
+.modal-header h3{font-family:var(--font-display);font-size:1.25rem}
+.modal-close{background:none;border:none;cursor:pointer;color:var(--muted);font-size:1.4rem;line-height:1;padding:4px;border-radius:6px}
+.modal-close:hover{background:var(--border)}
+.modal-body{padding:1.5rem}
+.modal-footer{padding:1rem 1.5rem;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:0.75rem}
 
-/* ---- CONFIRM MODAL ---- */
-.confirm-box{background:var(--surface);border-radius:var(--radius-lg);padding:28px;max-width:380px;margin:auto;border:1px solid var(--border);box-shadow:var(--shadow-md)}
+/* FORM */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.75rem}
+.form-group{display:flex;flex-direction:column;gap:4px}
+.form-group.full{grid-column:1/-1}
+.form-group label{font-size:12px;font-weight:500;color:var(--muted)}
+.form-group input,.form-group select,.form-group textarea{border:1px solid var(--border-strong);border-radius:8px;padding:7px 10px;font-size:13px;font-family:var(--font);color:var(--text);background:var(--surface2);outline:none;transition:border-color 0.15s}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--accent);background:#fff}
+.form-group textarea{resize:vertical;min-height:70px}
 
-/* ---- PAGINATION ---- */
-.pager{display:flex;align-items:center;gap:6px;margin-top:14px;justify-content:flex-end}
-.pager button{padding:5px 11px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);cursor:pointer;font-size:12px;color:var(--text2)}
-.pager button:hover{background:var(--surface2)}
-.pager button.cur{background:var(--blue);color:#fff;border-color:var(--blue)}
-.pager-info{font-size:12px;color:var(--text3);margin-right:auto}
+/* CONFIRM */
+.confirm-modal{max-width:380px}
+.confirm-body{padding:1.5rem;text-align:center}
+.confirm-body h3{font-family:var(--font-display);font-size:1.2rem;margin-bottom:0.5rem}
+.confirm-body p{font-size:13px;color:var(--muted);line-height:1.5}
+.confirm-footer{padding:1rem 1.5rem;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:0.75rem}
 
-/* ---- REPORTS ---- */
-.metrics-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-bottom:24px}
-.metric{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px;box-shadow:var(--shadow)}
-.metric .m-label{font-size:11px;font-weight:600;letter-spacing:.4px;text-transform:uppercase;color:var(--text3);margin-bottom:6px}
-.metric .m-val{font-size:26px;font-weight:700}
-.chart-section{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px;box-shadow:var(--shadow)}
-.charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
-.chart-title{font-size:12px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--text2);margin-bottom:12px}
-.bar-row{display:flex;align-items:center;gap:8px;margin-bottom:7px;font-size:12px}
-.bar-lbl{width:100px;color:var(--text2);text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:11px}
-.bar-track{flex:1;height:14px;background:var(--surface2);border-radius:4px;overflow:hidden}
-.bar-fill{height:100%;background:var(--blue);border-radius:4px;transition:width .4s}
-.bar-n{width:24px;color:var(--text3);font-size:11px}
-
-/* ---- LOADING ---- */
-.loading-overlay{display:none;position:fixed;inset:0;background:rgba(255,255,255,.7);z-index:300;align-items:center;justify-content:center;flex-direction:column;gap:12px}
-.loading-overlay.show{display:flex}
-.spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
-.toast{position:fixed;bottom:24px;right:24px;background:var(--text);color:#fff;padding:10px 18px;border-radius:var(--radius);font-size:13px;z-index:400;opacity:0;transform:translateY(8px);transition:all .25s;pointer-events:none}
-.toast.show{opacity:1;transform:translateY(0)}
-.toast.err{background:var(--red)}
-.empty-msg{text-align:center;padding:48px;color:var(--text3);font-size:13px}
+/* LOADING */
+.loading{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:200;flex-direction:column;gap:1rem}
+.loading-icon{font-size:2.5rem;animation:pulse 1.2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+.loading p{color:var(--muted);font-size:14px}
 </style>
 </head>
 <body>
 
 <!-- LOADING -->
-<div class="loading-overlay" id="loadingOverlay">
-  <div class="spinner"></div>
-  <div style="font-size:13px;color:var(--text2)" id="loadingMsg">Loading…</div>
+<div class="loading" id="loading">
+  <div class="loading-icon">🏥</div>
+  <p>Loading…</p>
 </div>
-<div class="toast" id="toast"></div>
 
 <!-- LOGIN -->
-<div class="login-wrap" id="loginScreen">
+<div class="login-wrap" id="login-screen" style="display:none">
   <div class="login-card">
-    <div class="login-logo">🏥</div>
-    <h1>ICU Admin Database</h1>
+    <div class="login-icon">🏥</div>
+    <h2>ICU Admin Database</h2>
     <p>Authorized personnel only</p>
-    <input type="password" id="pwInput" placeholder="••••" maxlength="10"
-      onkeydown="if(event.key==='Enter')doLogin()" autocomplete="off" />
-    <div class="login-err" id="loginErr"></div>
-    <button class="btn-login" onclick="doLogin()">Sign in</button>
-    <div class="backend-row">
+    <input type="password" id="pwd-input" placeholder="Password" onkeydown="if(event.key==='Enter')tryLogin()">
+    <div class="login-error" id="login-error">Incorrect password.</div>
+    <button class="btn btn-primary btn-full" onclick="tryLogin()">Sign in</button>
+    <div class="script-section">
       <label>Google Apps Script URL (paste once, saved automatically)</label>
-      <input type="text" id="backendUrl" placeholder="https://script.google.com/macros/s/.../exec"
-        oninput="saveBackendUrl()" />
+      <input type="text" id="script-url-input" placeholder="https://script.google.com/macros/s/..." oninput="saveScriptUrl()">
     </div>
   </div>
 </div>
 
 <!-- MAIN APP -->
-<div id="mainApp">
-  <div class="topbar">
-    <div class="topbar-left">
-      <div class="topbar-logo">🏥</div>
-      <h1>ICU Admin Database</h1>
-      <span class="badge badge-admin">ADMIN</span>
-    </div>
-    <div class="topbar-right">
-      <button class="btn btn-primary" onclick="openAddModal()">＋ Add Patient</button>
-      <button class="btn" onclick="loadPatients()" title="Refresh from sheet">↻ Refresh</button>
-      <button class="btn" onclick="doLogout()">Sign out</button>
+<div class="app" id="app">
+  <div class="header">
+    <div class="header-title"><span>🏥</span> ICU Admin Database</div>
+    <div class="header-right">
+      <span class="badge-admin">ADMIN</span>
+      <button class="btn btn-ghost btn-sm" onclick="loadPatients()">↻ Refresh</button>
+      <button class="btn btn-ghost btn-sm" onclick="signOut()">Sign out</button>
     </div>
   </div>
 
-  <div class="tabs">
-    <div class="tab active" id="tab-patients" onclick="switchTab('patients')">🧑‍⚕️ Patients</div>
-    <div class="tab" id="tab-reports" onclick="switchTab('reports')">📊 Reports</div>
+  <div class="toolbar">
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('patients',this)">🧑‍⚕️ Patients</button>
+      <button class="tab" onclick="switchTab('reports',this)">📊 Reports</button>
+    </div>
+    <div class="toolbar-sep"></div>
+    <button class="btn btn-primary btn-sm" onclick="openAddModal()" id="add-btn">＋ Add Patient</button>
+    <div class="toolbar-sep"></div>
+    <select class="filter-select" id="f-area" onchange="applyFilters()">
+      <option value="">All areas</option>
+      <option>Trauma</option><option>Burn</option><option>400H</option>
+      <option>T1A1</option><option>T1B1</option><option>T1A2</option><option>SDU</option>
+    </select>
+    <select class="filter-select" id="f-type" onchange="applyFilters()">
+      <option value="">All types</option>
+      <option>FT</option><option>Maternity</option><option>Medical</option>
+      <option>Surgical</option><option>Trauma</option>
+    </select>
+    <select class="filter-select" id="f-status" onchange="applyFilters()">
+      <option value="">All statuses</option>
+      <option>Active (not discharged)</option><option>Death</option><option>DNR</option>
+      <option>Home</option><option>DAMA</option><option>Absconded</option>
+      <option>Ward</option><option>Other hospital</option>
+    </select>
+    <select class="filter-select" id="f-sex" onchange="applyFilters()">
+      <option value="">All genders</option>
+      <option>Male</option><option>Female</option>
+    </select>
+    <button class="btn btn-outline btn-sm" onclick="clearFilters()">✕ Clear</button>
+    <div class="spacer"></div>
+    <button class="btn btn-outline btn-sm" onclick="exportCSV()">↓ Export CSV</button>
+    <span class="status-msg" id="status-msg"></span>
   </div>
 
-  <div class="content" id="patientsTab">
-    <div class="toolbar">
-      <div class="search-wrap">
-        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input type="text" placeholder="Search file #, name, diagnosis, specialty…" id="searchInput" oninput="renderTable()" />
-      </div>
-      <select class="filter-sel" id="fArea" onchange="renderTable()">
-        <option value="">All areas</option>
-        <option>Trauma</option><option>Burn</option><option>400H</option>
-        <option>T1A1</option><option>T1B1</option><option>T1A2</option><option>SDU</option>
-      </select>
-      <select class="filter-sel" id="fType" onchange="renderTable()">
-        <option value="">All types</option>
-        <option>FT</option><option>Maternity</option><option>Medical</option>
-        <option>Surgical</option><option>Trauma</option>
-      </select>
-      <select class="filter-sel" id="fStatus" onchange="renderTable()">
-        <option value="">All statuses</option>
-        <option value="active">Active (not discharged)</option>
-        <option>Death</option><option>DNR</option><option>Home</option>
-        <option>DAMA</option><option>Absconded</option><option>Ward</option>
-        <option>Other hospital</option>
-      </select>
-      <select class="filter-sel" id="fSex" onchange="renderTable()">
-        <option value="">All genders</option><option>Male</option><option>Female</option>
-      </select>
-      <button class="btn btn-sm" onclick="clearFilters()">✕ Clear</button>
-      <button class="btn btn-sm" onclick="exportCSV()">↓ Export CSV</button>
-    </div>
-    <div class="table-card">
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th onclick="sortBy('fileNo')">File # ↕</th>
-              <th onclick="sortBy('name')">Name ↕</th>
-              <th>Age</th><th>Sex</th>
-              <th onclick="sortBy('doa')">DOA ↕</th>
-              <th>Area</th><th>Adm. Type</th><th>Adm. From</th>
-              <th>Specialty</th><th>Diagnosis</th>
-              <th>Mortality%</th>
-              <th>Days / LOS</th>
-              <th onclick="sortBy('dod')">DOD ↕</th>
-              <th>Discharge Status</th>
-              <th>Other Hospital</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody id="tableBody"></tbody>
-        </table>
-      </div>
-    </div>
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px">
-      <div class="pager-info" id="rowCount"></div>
-      <div class="pager" id="pagination"></div>
-    </div>
+  <!-- PATIENTS TAB -->
+  <div id="tab-patients" class="table-wrap">
+    <table id="patients-table">
+      <thead>
+        <tr>
+          <th onclick="sortBy('fileNo')">File # <i class="sort-icon">↕</i></th>
+          <th onclick="sortBy('name')">Name <i class="sort-icon">↕</i></th>
+          <th>Age</th>
+          <th>Sex</th>
+          <th onclick="sortBy('doa')">DOA <i class="sort-icon">↕</i></th>
+          <th>Area</th>
+          <th>Adm. Type</th>
+          <th>Adm. From</th>
+          <th>Specialty</th>
+          <th>Diagnosis</th>
+          <th>Mortality%</th>
+          <th>Days / LOS</th>
+          <th onclick="sortBy('dod')">DOD <i class="sort-icon">↕</i></th>
+          <th>Discharge Status</th>
+          <th>Other Hospital</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="patients-tbody"></tbody>
+    </table>
   </div>
 
-  <div class="content" id="reportsTab" style="display:none">
-    <div id="reportContent"></div>
+  <!-- REPORTS TAB -->
+  <div id="tab-reports" style="display:none">
+    <div class="reports-wrap" id="reports-wrap"></div>
   </div>
 </div>
 
-<!-- PATIENT FORM MODAL -->
-<div class="overlay" id="formModal">
+<!-- ADD / EDIT MODAL -->
+<div class="overlay" id="patient-overlay">
   <div class="modal">
-    <div class="modal-hdr">
-      <h2 id="modalTitle">Add patient</h2>
-      <button class="modal-close" onclick="closeModal()">&times;</button>
+    <div class="modal-header">
+      <h3 id="modal-title">Add Patient</h3>
+      <button class="modal-close" onclick="closePatientModal()">×</button>
     </div>
-    <div class="modal-body" id="modalBody"></div>
-    <div class="modal-ftr">
-      <button class="btn" onclick="closeModal()">Cancel</button>
-      <button class="btn btn-primary" onclick="savePatient()" id="saveBtn">Add patient</button>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group"><label>File #</label><input type="text" id="f-fileNo"></div>
+        <div class="form-group"><label>Full Name</label><input type="text" id="f-name"></div>
+        <div class="form-group"><label>Age</label><input type="number" id="f-age" min="0"></div>
+        <div class="form-group"><label>Sex</label>
+          <select id="f-sex-input"><option value="">—</option><option>Male</option><option>Female</option></select>
+        </div>
+        <div class="form-group"><label>Date of Admission</label><input type="date" id="f-doa"></div>
+        <div class="form-group"><label>Area</label>
+          <select id="f-area-input"><option value="">—</option>
+            <option>Trauma</option><option>Burn</option><option>400H</option>
+            <option>T1A1</option><option>T1B1</option><option>T1A2</option><option>SDU</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Admission Type</label>
+          <select id="f-admType"><option value="">—</option>
+            <option>FT</option><option>Maternity</option><option>Medical</option>
+            <option>Surgical</option><option>Trauma</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Admitted From</label><input type="text" id="f-admFrom"></div>
+        <div class="form-group"><label>Specialty</label><input type="text" id="f-specialty"></div>
+        <div class="form-group"><label>Mortality %</label><input type="number" id="f-mortality" min="0" max="100" step="0.1"></div>
+        <div class="form-group full"><label>Diagnosis</label><input type="text" id="f-diagnosis"></div>
+        <div class="form-group"><label>Date of Discharge</label><input type="date" id="f-dod"></div>
+        <div class="form-group"><label>Discharge Status</label>
+          <select id="f-dischargeStatus"><option value="">—</option>
+            <option>Active (not discharged)</option><option>Death</option><option>DNR</option>
+            <option>Home</option><option>DAMA</option><option>Absconded</option>
+            <option>Ward</option><option>Other hospital</option>
+          </select>
+        </div>
+        <div class="form-group full"><label>Other Hospital (if applicable)</label><input type="text" id="f-otherHospital"></div>
+        <div class="form-group full"><label>Notes</label><textarea id="f-notes"></textarea></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closePatientModal()">Cancel</button>
+      <button class="btn btn-primary" id="save-btn" onclick="savePatient()">Add patient</button>
     </div>
   </div>
 </div>
 
-<!-- CONFIRM DELETE MODAL -->
-<div class="overlay" id="confirmModal">
-  <div class="confirm-box">
-    <p style="font-size:16px;font-weight:600;margin-bottom:8px">Delete patient record?</p>
-    <p style="font-size:13px;color:var(--text2);margin-bottom:22px">This action cannot be undone. The record will be permanently removed from the shared database.</p>
-    <div style="display:flex;gap:8px;justify-content:flex-end">
-      <button class="btn" onclick="closeConfirm()">Cancel</button>
-      <button class="btn" style="background:var(--red);color:#fff;border-color:var(--red)" id="confirmDeleteBtn">Yes, delete</button>
+<!-- CONFIRM DELETE -->
+<div class="overlay" id="confirm-overlay">
+  <div class="modal confirm-modal">
+    <div class="confirm-body">
+      <h3>Delete patient record?</h3>
+      <p>This action cannot be undone. The record will be permanently removed from the shared database.</p>
+    </div>
+    <div class="confirm-footer">
+      <button class="btn btn-outline" onclick="closeConfirm()">Cancel</button>
+      <button class="btn btn-danger" onclick="confirmDelete()">Yes, delete</button>
     </div>
   </div>
 </div>
 
 <script>
-const PASS = "1406";
-const SPECIALTIES = ["Anesthesia","Burn Surgery","Cardiac Surgery","Cardiology","Dermatology",
-  "Emergency Medicine","Endocrinology","ENT","Gastroenterology","General Surgery","Gynecology",
-  "Hematology","Hepatology","Infectious Disease","Internal Medicine","Neonatology","Nephrology",
-  "Neurology","Neurosurgery","Obstetrics","Oncology","Ophthalmology",
-  "Oral & Maxillofacial Surgery","Orthopedic Surgery","Pediatrics","Pediatric Surgery",
-  "Plastic Surgery","Pulmonology","Psychiatry","Radiology","Rheumatology",
-  "Thoracic Surgery","Trauma Surgery","Urology","Vascular Surgery"];
+const PASSWORD = '1406';
+const STORAGE_KEY = 'icu_db_config';
 
-let patients = [];
-let sortKey = 'doa', sortDir = -1, page = 1;
-const PER_PAGE = 20;
+let allPatients = [];
+let editingId = null;
+let deleteId = null;
+let sortCol = 'doa';
+let sortDir = -1;
 
-// ---------- BACKEND ----------
-function getUrl() { return (document.getElementById('backendUrl').value||'').trim() || localStorage.getItem('icuBackendUrl')||''; }
-function saveBackendUrl() { localStorage.setItem('icuBackendUrl', document.getElementById('backendUrl').value.trim()); }
-
-async function api(payload) {
-  const url = getUrl();
-  if (!url) { showToast('Please enter the Google Apps Script URL first.', true); throw new Error('No URL'); }
-  const res = await fetch(url, {
-    method: 'POST',
-    body: JSON.stringify({ password: PASS, ...payload })
-  });
-  const data = await res.json();
-  if (!data.ok) throw new Error(data.error || 'API error');
-  return data;
+function getScriptUrl() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)||'{}').scriptUrl || ''; } catch(e){ return ''; }
+}
+function saveScriptUrl() {
+  const url = document.getElementById('script-url-input').value.trim();
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({scriptUrl: url}));
 }
 
-// ---------- AUTH ----------
-function doLogin() {
-  const v = document.getElementById('pwInput').value;
-  if (v !== PASS) { document.getElementById('loginErr').textContent = 'Incorrect password.'; document.getElementById('pwInput').value=''; return; }
-  const saved = localStorage.getItem('icuBackendUrl');
-  if (saved) document.getElementById('backendUrl').value = saved;
-  document.getElementById('loginScreen').style.display = 'none';
-  document.getElementById('mainApp').style.display = 'flex';
-  document.getElementById('mainApp').style.flexDirection = 'column';
+// AUTH
+function tryLogin() {
+  const pwd = document.getElementById('pwd-input').value;
+  if (pwd === PASSWORD) {
+    sessionStorage.setItem('icu_auth','1');
+    showApp();
+  } else {
+    document.getElementById('login-error').classList.add('show');
+    document.getElementById('pwd-input').value = '';
+  }
+}
+function signOut() {
+  sessionStorage.removeItem('icu_auth');
+  location.reload();
+}
+
+// INIT
+window.addEventListener('load', () => {
+  document.getElementById('loading').style.display = 'none';
+  const savedUrl = getScriptUrl();
+  if (savedUrl) document.getElementById('script-url-input').value = savedUrl;
+  if (sessionStorage.getItem('icu_auth') === '1') {
+    showApp();
+  } else {
+    document.getElementById('login-screen').style.display = 'flex';
+  }
+});
+
+function showApp() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').classList.add('visible');
   loadPatients();
 }
-function doLogout() {
-  document.getElementById('mainApp').style.display = 'none';
-  document.getElementById('loginScreen').style.display = 'flex';
-  document.getElementById('pwInput').value = '';
-  document.getElementById('loginErr').textContent = '';
-  patients = [];
-}
 
-// ---------- DATA ----------
-async function loadPatients() {
-  showLoading('Loading patients from Google Sheet…');
+// API
+async function api(body) {
+  const url = getScriptUrl();
+  if (!url) { setStatus('⚠️ No script URL set. Please add it on the login screen.'); return null; }
   try {
-    const res = await api({ action: 'getAll' });
-    patients = res.data || [];
-    renderTable(); renderReport();
-    showToast('Data refreshed ✓');
+    const res = await fetch(url, {
+      method: 'POST',
+      body: JSON.stringify(body)
+    });
+    const data = await res.json();
+    if (data.error) { setStatus('Error: ' + data.error); return null; }
+    return data;
   } catch(e) {
-    if (e.message !== 'No URL') showToast('Error loading data: ' + e.message, true);
-  } finally { hideLoading(); }
+    setStatus('Connection error: ' + e.message);
+    return null;
+  }
 }
 
-// ---------- TABLE ----------
-function daysBetween(d1, d2) { return Math.floor((new Date(d2) - new Date(d1)) / 86400000); }
-function today() { return new Date().toISOString().slice(0, 10); }
-function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function setStatus(msg, clear=true) {
+  document.getElementById('status-msg').textContent = msg;
+  if (clear) setTimeout(() => document.getElementById('status-msg').textContent = '', 3000);
+}
 
-function getFiltered() {
-  const q = (document.getElementById('searchInput').value||'').toLowerCase();
-  const fA = document.getElementById('fArea').value;
-  const fT = document.getElementById('fType').value;
-  const fS = document.getElementById('fStatus').value;
-  const fX = document.getElementById('fSex').value;
-  return patients.filter(p => {
-    if (q && ![p.fileNo,p.name,p.diagnosis,p.specialty].join(' ').toLowerCase().includes(q)) return false;
-    if (fA && p.area !== fA) return false;
-    if (fT && p.admType !== fT) return false;
-    if (fX && p.sex !== fX) return false;
-    if (fS) { if (fS === 'active') return !p.dischargeStatus; if (p.dischargeStatus !== fS) return false; }
-    return true;
-  }).sort((a, b) => {
-    let av = a[sortKey]||'', bv = b[sortKey]||'';
-    return av < bv ? -sortDir : av > bv ? sortDir : 0;
+// LOAD
+async function loadPatients() {
+  setStatus('Loading…', false);
+  const data = await api({ action: 'get' });
+  if (!data) return;
+  allPatients = data.patients || [];
+  setStatus('');
+  applyFilters();
+  renderReports();
+}
+
+// FILTERS & SORT
+function applyFilters() {
+  const area = document.getElementById('f-area').value;
+  const type = document.getElementById('f-type').value;
+  const status = document.getElementById('f-status').value;
+  const sex = document.getElementById('f-sex').value;
+  let filtered = allPatients.filter(p =>
+    (!area || p.area === area) &&
+    (!type || p.admType === type) &&
+    (!status || p.dischargeStatus === status) &&
+    (!sex || p.sex === sex)
+  );
+  filtered = filtered.sort((a,b) => {
+    let av = a[sortCol]||'', bv = b[sortCol]||'';
+    return av < bv ? sortDir : av > bv ? -sortDir : 0;
   });
+  renderTable(filtered);
 }
 
-function sortBy(k) { sortKey === k ? sortDir *= -1 : (sortKey = k, sortDir = 1); renderTable(); }
-function clearFilters() { ['searchInput','fArea','fType','fStatus','fSex'].forEach(id => document.getElementById(id).value=''); renderTable(); }
+function clearFilters() {
+  ['f-area','f-type','f-status','f-sex'].forEach(id => document.getElementById(id).value = '');
+  applyFilters();
+}
 
-function renderTable() { page = 1; renderPage(getFiltered()); }
+function sortBy(col) {
+  if (sortCol === col) sortDir *= -1; else { sortCol = col; sortDir = -1; }
+  document.querySelectorAll('th.sorted').forEach(t => t.classList.remove('sorted'));
+  applyFilters();
+}
 
-function renderPage(data) {
-  const total = data.length;
-  const pages = Math.max(1, Math.ceil(total / PER_PAGE));
-  if (page > pages) page = pages;
-  const slice = data.slice((page-1)*PER_PAGE, page*PER_PAGE);
-  const tbody = document.getElementById('tableBody');
-
-  if (!slice.length) {
-    tbody.innerHTML = `<tr><td colspan="16" class="empty-msg">No patients found</td></tr>`;
-    document.getElementById('rowCount').textContent = '';
-    document.getElementById('pagination').innerHTML = '';
+// RENDER TABLE
+function renderTable(patients) {
+  const tbody = document.getElementById('patients-tbody');
+  if (!patients.length) {
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="16">No patients found.</td></tr>';
     return;
   }
-
-  tbody.innerHTML = slice.map(p => {
-    const dis = !!p.dischargeStatus;
-    let daysCell = '—';
-    if (!dis && p.doa) {
-      const d = daysBetween(p.doa, today());
-      daysCell = `<span class="days-active">${d}d</span>`;
-    } else if (dis && p.doa && p.dod) {
-      daysCell = `<span class="days-los">${daysBetween(p.doa, p.dod)}d LOS</span>`;
-    }
-    const sbMap = {Death:'sb-death',DNR:'sb-dnr',Home:'sb-home',DAMA:'sb-dama',Ward:'sb-ward','Other hospital':'sb-other',Absconded:'sb-absconded'};
-    const sbClass = sbMap[p.dischargeStatus] || 'sb-active';
-    const sbLabel = p.dischargeStatus || 'Active';
+  tbody.innerHTML = patients.map(p => {
+    const los = calcLOS(p.doa, p.dod);
+    const statusClass = p.dischargeStatus === 'Active (not discharged)' ? 'status-active'
+      : p.dischargeStatus === 'Death' ? 'status-death' : 'status-other';
     return `<tr>
-      <td><span class="file-no">${esc(p.fileNo)}</span></td>
-      <td title="${esc(p.name)}">${esc(p.name)}</td>
-      <td>${p.age||''}</td>
-      <td>${p.sex||''}</td>
-      <td>${p.doa||''}</td>
-      <td>${p.area||''}</td>
-      <td>${p.admType||''}</td>
-      <td>${p.admFrom||''}</td>
-      <td title="${esc(p.specialty||'')}">${esc((p.specialty||'').slice(0,18)+(p.specialty&&p.specialty.length>18?'…':''))}</td>
-      <td title="${esc(p.diagnosis||'')}">${esc((p.diagnosis||'').slice(0,25)+(p.diagnosis&&p.diagnosis.length>25?'…':''))}</td>
-      <td>${p.mortality||''}</td>
-      <td>${daysCell}</td>
-      <td>${p.dod||''}</td>
-      <td><span class="sb ${sbClass}">${sbLabel}</span></td>
-      <td>${esc(p.otherHospital||'')}</td>
-      <td><div class="row-actions">
-        <button onclick="openEditModal('${p.id}')">✏️ Edit</button>
-        <button class="del-btn" onclick="confirmDelete('${p.id}')">🗑️ Del</button>
-      </div></td>
+      <td>${esc(p.fileNo)}</td>
+      <td><strong>${esc(p.name)}</strong></td>
+      <td>${esc(p.age)}</td>
+      <td>${esc(p.sex)}</td>
+      <td>${fmtDate(p.doa)}</td>
+      <td>${esc(p.area)}</td>
+      <td>${esc(p.admType)}</td>
+      <td>${esc(p.admFrom)}</td>
+      <td>${esc(p.specialty)}</td>
+      <td>${esc(p.diagnosis)}</td>
+      <td>${p.mortality ? p.mortality+'%' : ''}</td>
+      <td>${los}</td>
+      <td>${fmtDate(p.dod)}</td>
+      <td><span class="status-badge ${statusClass}">${esc(p.dischargeStatus)}</span></td>
+      <td>${esc(p.otherHospital)}</td>
+      <td class="td-actions">
+        <button class="btn btn-outline btn-sm" onclick="openEditModal('${p.id}')">Edit</button>
+        <button class="btn btn-danger btn-sm" onclick="askDelete('${p.id}')">Delete</button>
+      </td>
     </tr>`;
   }).join('');
-
-  document.getElementById('rowCount').textContent = `Showing ${(page-1)*PER_PAGE+1}–${Math.min(page*PER_PAGE,total)} of ${total} patient(s)`;
-
-  let pg = '';
-  if (pages > 1) {
-    pg += `<button onclick="goPage(${Math.max(1,page-1)})">‹</button>`;
-    for (let i = 1; i <= pages; i++) pg += `<button class="${i===page?'cur':''}" onclick="goPage(${i})">${i}</button>`;
-    pg += `<button onclick="goPage(${Math.min(pages,page+1)})">›</button>`;
-  }
-  document.getElementById('pagination').innerHTML = pg;
 }
 
-function goPage(p) { page = p; renderPage(getFiltered()); }
-
-// ---------- FORM ----------
-function buildForm(p) {
-  const o = (v, lbl, sel) => `<option value="${v}"${sel==v?' selected':''}>${lbl||v}</option>`;
-  const areas = ['Trauma','Burn','400H','T1A1','T1B1','T1A2','SDU'];
-  const types = ['FT','Maternity','Medical','Surgical','Trauma'];
-  const froms = ['ER','Ward','ER to OR','Ward to OR','ER to Cath','Ward to Cath','Fax to ER','Fax to Cath','Life Saving'];
-  const statuses = ['Death','DNR','Home','DAMA','Absconded','Ward','Other hospital'];
-  const v = k => esc((p&&p[k])||'');
-  const sel = (name, opts, val) => `<select name="${name}"><option value="">— select —</option>${opts.map(x=>o(x,x,val)).join('')}</select>`;
-
-  return `
-  <div class="section-divider">Patient identification</div>
-  <div class="field">
-    <label>File number *</label>
-    <input type="text" name="fileNo" value="${v('fileNo')}" placeholder="e.g. 202400001" />
-    <span class="field-hint">Must be unique — used as the primary key</span>
-  </div>
-  <div class="field">
-    <label>Full name *</label>
-    <input type="text" name="name" value="${v('name')}" placeholder="Patient full name" />
-  </div>
-  <div class="field">
-    <label>Age</label>
-    <input type="number" name="age" value="${v('age')}" min="0" max="150" placeholder="Years" />
-  </div>
-  <div class="field">
-    <label>Sex</label>
-    <select name="sex"><option value="">—</option>
-      <option${p&&p.sex==='Male'?' selected':''}>Male</option>
-      <option${p&&p.sex==='Female'?' selected':''}>Female</option>
-    </select>
-  </div>
-
-  <div class="section-divider">Admission details</div>
-  <div class="field">
-    <label>Date of admission *</label>
-    <input type="date" name="doa" value="${v('doa')}" />
-  </div>
-  <div class="field">
-    <label>Admission area *</label>${sel('area', areas, p&&p.area)}
-  </div>
-  <div class="field">
-    <label>Admission type *</label>${sel('admType', types, p&&p.admType)}
-  </div>
-  <div class="field">
-    <label>Admitted from *</label>${sel('admFrom', froms, p&&p.admFrom)}
-  </div>
-  <div class="field full">
-    <label>Admitting specialty</label>
-    <select name="specialty"><option value="">— select —</option>${SPECIALTIES.map(s=>`<option${p&&p.specialty===s?' selected':''}>${s}</option>`).join('')}</select>
-  </div>
-  <div class="field full">
-    <label>Diagnosis</label>
-    <textarea name="diagnosis">${esc((p&&p.diagnosis)||'')}</textarea>
-  </div>
-  <div class="field">
-    <label>Predicted mortality (%)</label>
-    <input type="number" name="mortality" value="${v('mortality')}" min="0" max="100" placeholder="0–100" />
-  </div>
-
-  <div class="section-divider">Discharge details</div>
-  <div class="field">
-    <label>Date of discharge</label>
-    <input type="date" name="dod" value="${v('dod')}" />
-  </div>
-  <div class="field">
-    <label>Discharge status</label>
-    <select name="dischargeStatus" onchange="toggleOtherHosp(this)">
-      <option value="">Active / not discharged</option>
-      ${statuses.map(s=>`<option value="${s}"${p&&p.dischargeStatus===s?' selected':''}>${s}</option>`).join('')}
-    </select>
-  </div>
-  <div class="field full" id="otherHospField" style="display:${p&&p.dischargeStatus==='Other hospital'?'flex':'none'}">
-    <label>Other hospital name</label>
-    <input type="text" name="otherHospital" value="${v('otherHospital')}" placeholder="Hospital name" />
-  </div>`;
+function calcLOS(doa, dod) {
+  if (!doa) return '';
+  const start = new Date(doa);
+  const end = dod ? new Date(dod) : new Date();
+  const days = Math.round((end - start) / 86400000);
+  return days >= 0 ? days + 'd' : '';
 }
 
-function toggleOtherHosp(s) { document.getElementById('otherHospField').style.display = s.value==='Other hospital' ? 'flex' : 'none'; }
+function fmtDate(d) {
+  if (!d) return '';
+  try { return new Date(d).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}); }
+  catch(e){ return d; }
+}
 
-let editingId = null;
+function esc(v) {
+  if (v == null || v === '') return '';
+  return String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ADD / EDIT
 function openAddModal() {
   editingId = null;
-  document.getElementById('modalTitle').textContent = 'Add patient';
-  document.getElementById('saveBtn').textContent = 'Add patient';
-  document.getElementById('modalBody').innerHTML = buildForm(null);
-  document.getElementById('formModal').classList.add('open');
+  document.getElementById('modal-title').textContent = 'Add Patient';
+  document.getElementById('save-btn').textContent = 'Add patient';
+  clearForm();
+  document.getElementById('patient-overlay').classList.add('open');
 }
+
 function openEditModal(id) {
-  editingId = id;
-  const p = patients.find(x => x.id === id);
+  const p = allPatients.find(x => x.id == id);
   if (!p) return;
-  document.getElementById('modalTitle').textContent = 'Edit patient';
-  document.getElementById('saveBtn').textContent = 'Save changes';
-  document.getElementById('modalBody').innerHTML = buildForm(p);
-  document.getElementById('formModal').classList.add('open');
+  editingId = id;
+  document.getElementById('modal-title').textContent = 'Edit Patient';
+  document.getElementById('save-btn').textContent = 'Save changes';
+  document.getElementById('f-fileNo').value = p.fileNo||'';
+  document.getElementById('f-name').value = p.name||'';
+  document.getElementById('f-age').value = p.age||'';
+  document.getElementById('f-sex-input').value = p.sex||'';
+  document.getElementById('f-doa').value = p.doa||'';
+  document.getElementById('f-area-input').value = p.area||'';
+  document.getElementById('f-admType').value = p.admType||'';
+  document.getElementById('f-admFrom').value = p.admFrom||'';
+  document.getElementById('f-specialty').value = p.specialty||'';
+  document.getElementById('f-diagnosis').value = p.diagnosis||'';
+  document.getElementById('f-mortality').value = p.mortality||'';
+  document.getElementById('f-dod').value = p.dod||'';
+  document.getElementById('f-dischargeStatus').value = p.dischargeStatus||'';
+  document.getElementById('f-otherHospital').value = p.otherHospital||'';
+  document.getElementById('f-notes').value = p.notes||'';
+  document.getElementById('patient-overlay').classList.add('open');
 }
-function closeModal() { document.getElementById('formModal').classList.remove('open'); }
+
+function clearForm() {
+  ['f-fileNo','f-name','f-age','f-doa','f-admFrom','f-specialty','f-diagnosis','f-mortality','f-dod','f-otherHospital','f-notes'].forEach(id => document.getElementById(id).value = '');
+  ['f-sex-input','f-area-input','f-admType','f-dischargeStatus'].forEach(id => document.getElementById(id).value = '');
+}
+
+function closePatientModal() {
+  document.getElementById('patient-overlay').classList.remove('open');
+}
 
 async function savePatient() {
-  const body = document.getElementById('modalBody');
-  const get = n => { const el = body.querySelector(`[name="${n}"]`); return el ? el.value.trim() : ''; };
-  const fileNo = get('fileNo');
-  if (!fileNo) { showToast('File number is required.', true); return; }
-  if (!get('name')) { showToast('Patient name is required.', true); return; }
-  if (!get('doa')) { showToast('Date of admission is required.', true); return; }
-  const dup = patients.find(p => p.fileNo === fileNo && p.id !== editingId);
-  if (dup) { showToast('File number already exists — must be unique.', true); return; }
-
-  const rec = { id: editingId||'', fileNo, name:get('name'), age:get('age'), sex:get('sex'),
-    doa:get('doa'), area:get('area'), admType:get('admType'), admFrom:get('admFrom'),
-    specialty:get('specialty'), diagnosis:get('diagnosis'), mortality:get('mortality'),
-    dod:get('dod'), dischargeStatus:get('dischargeStatus'), otherHospital:get('otherHospital') };
-
-  closeModal();
-  showLoading(editingId ? 'Saving changes…' : 'Adding patient…');
-  try {
-    if (editingId) {
-      await api({ action: 'update', row: rec });
-      const i = patients.findIndex(p => p.id === editingId);
-      patients[i] = rec;
-      showToast('Patient updated ✓');
-    } else {
-      const res = await api({ action: 'add', row: rec });
-      rec.id = res.id;
-      patients.push(rec);
-      showToast('Patient added ✓');
-    }
-    renderTable(); renderReport();
-  } catch(e) { showToast('Error: ' + e.message, true); }
-  finally { hideLoading(); }
-}
-
-// ---------- DELETE ----------
-let deleteTarget = null;
-function confirmDelete(id) {
-  deleteTarget = id;
-  document.getElementById('confirmModal').classList.add('open');
-  document.getElementById('confirmDeleteBtn').onclick = async () => {
-    closeConfirm();
-    showLoading('Deleting…');
-    try {
-      await api({ action: 'delete', id: deleteTarget });
-      patients = patients.filter(p => p.id !== deleteTarget);
-      renderTable(); renderReport();
-      showToast('Patient deleted');
-    } catch(e) { showToast('Error: ' + e.message, true); }
-    finally { hideLoading(); }
+  const body = {
+    action: editingId ? 'update' : 'add',
+    id: editingId || undefined,
+    fileNo: document.getElementById('f-fileNo').value.trim(),
+    name: document.getElementById('f-name').value.trim(),
+    age: document.getElementById('f-age').value,
+    sex: document.getElementById('f-sex-input').value,
+    doa: document.getElementById('f-doa').value,
+    area: document.getElementById('f-area-input').value,
+    admType: document.getElementById('f-admType').value,
+    admFrom: document.getElementById('f-admFrom').value.trim(),
+    specialty: document.getElementById('f-specialty').value.trim(),
+    diagnosis: document.getElementById('f-diagnosis').value.trim(),
+    mortality: document.getElementById('f-mortality').value,
+    dod: document.getElementById('f-dod').value,
+    dischargeStatus: document.getElementById('f-dischargeStatus').value,
+    otherHospital: document.getElementById('f-otherHospital').value.trim(),
+    notes: document.getElementById('f-notes').value.trim(),
   };
+  const btn = document.getElementById('save-btn');
+  btn.disabled = true; btn.textContent = 'Saving…';
+  const result = await api(body);
+  btn.disabled = false; btn.textContent = editingId ? 'Save changes' : 'Add patient';
+  if (result && result.success) {
+    closePatientModal();
+    setStatus(editingId ? '✓ Patient updated.' : '✓ Patient added.');
+    await loadPatients();
+  }
 }
-function closeConfirm() { document.getElementById('confirmModal').classList.remove('open'); deleteTarget = null; }
 
-// ---------- REPORTS ----------
-function switchTab(t) {
-  ['patients','reports'].forEach(x => {
-    document.getElementById(x+'Tab').style.display = x===t ? 'block' : 'none';
-    document.getElementById('tab-'+x).className = 'tab' + (x===t ? ' active' : '');
-  });
-  if (t === 'reports') renderReport();
+// DELETE
+function askDelete(id) {
+  deleteId = id;
+  document.getElementById('confirm-overlay').classList.add('open');
+}
+function closeConfirm() {
+  deleteId = null;
+  document.getElementById('confirm-overlay').classList.remove('open');
+}
+async function confirmDelete() {
+  if (!deleteId) return;
+  closeConfirm();
+  const result = await api({ action: 'delete', id: deleteId });
+  if (result && result.success) {
+    setStatus('✓ Patient deleted.');
+    await loadPatients();
+  }
+  deleteId = null;
 }
 
-function renderReport() {
-  const el = document.getElementById('reportContent');
-  if (!el) return;
-  const total = patients.length;
-  if (!total) { el.innerHTML = '<div class="empty-msg">No patients in the database yet.</div>'; return; }
-  const active = patients.filter(p => !p.dischargeStatus).length;
-  const deaths = patients.filter(p => p.dischargeStatus === 'Death').length;
-  const losVals = patients.filter(p => p.doa && p.dod).map(p => daysBetween(p.doa, p.dod));
-  const avgLos = losVals.length ? Math.round(losVals.reduce((a,b)=>a+b,0)/losVals.length) : 0;
-  const countBy = key => { const m={}; patients.forEach(p=>{ const v=p[key]||'Unknown'; m[v]=(m[v]||0)+1; }); return Object.entries(m).sort((a,b)=>b[1]-a[1]); };
-  const bars = (entries) => entries.slice(0,8).map(([k,v])=>`
-    <div class="bar-row">
-      <div class="bar-lbl" title="${esc(k)}">${esc(k)}</div>
-      <div class="bar-track"><div class="bar-fill" style="width:${total?Math.round(v/total*100):0}%"></div></div>
-      <div class="bar-n">${v}</div>
+// TABS
+function switchTab(tab, el) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('tab-patients').style.display = tab === 'patients' ? 'block' : 'none';
+  document.getElementById('tab-reports').style.display = tab === 'reports' ? 'block' : 'none';
+  document.getElementById('add-btn').style.display = tab === 'patients' ? 'inline-flex' : 'none';
+  if (tab === 'reports') renderReports();
+}
+
+// REPORTS
+function renderReports() {
+  const p = allPatients;
+  const active = p.filter(x => x.dischargeStatus === 'Active (not discharged)').length;
+  const deaths = p.filter(x => x.dischargeStatus === 'Death').length;
+  const discharged = p.filter(x => x.dischargeStatus && x.dischargeStatus !== 'Active (not discharged)').length;
+  const losList = p.filter(x => x.doa).map(x => calcLOS(x.doa, x.dod)).map(x => parseInt(x)).filter(x => !isNaN(x));
+  const avgLOS = losList.length ? (losList.reduce((a,b)=>a+b,0)/losList.length).toFixed(1) : '—';
+  const mortality = p.filter(x => x.mortality).map(x => parseFloat(x.mortality)).filter(x => !isNaN(x));
+  const avgMort = mortality.length ? (mortality.reduce((a,b)=>a+b,0)/mortality.length).toFixed(1)+'%' : '—';
+  const cards = [
+    { label: 'Total Patients', value: p.length, sub: 'All time' },
+    { label: 'Active (not discharged)', value: active, sub: 'Currently admitted' },
+    { label: 'Discharged', value: discharged, sub: 'All discharge types' },
+    { label: 'Deaths', value: deaths, sub: 'Discharge status: Death' },
+    { label: 'Avg. LOS', value: avgLOS, sub: 'Days (all patients)' },
+    { label: 'Avg. Mortality %', value: avgMort, sub: 'Predicted mortality' },
+  ];
+  document.getElementById('reports-wrap').innerHTML = cards.map(c => `
+    <div class="report-card">
+      <div class="report-card-label">${c.label}</div>
+      <div class="report-card-value">${c.value}</div>
+      <div class="report-card-sub">${c.sub}</div>
     </div>`).join('');
-
-  el.innerHTML = `
-  <div class="metrics-grid">
-    <div class="metric"><div class="m-label">Total patients</div><div class="m-val">${total}</div></div>
-    <div class="metric"><div class="m-label">Currently active</div><div class="m-val" style="color:var(--amber)">${active}</div></div>
-    <div class="metric"><div class="m-label">Discharged</div><div class="m-val">${total-active}</div></div>
-    <div class="metric"><div class="m-label">Deaths</div><div class="m-val" style="color:var(--red)">${deaths}</div></div>
-    <div class="metric"><div class="m-label">Mortality rate</div><div class="m-val">${Math.round(deaths/total*100)}%</div></div>
-    <div class="metric"><div class="m-label">Avg LOS (days)</div><div class="m-val">${avgLos}</div></div>
-  </div>
-  <div class="charts-grid">
-    <div class="chart-section"><div class="chart-title">By admission area</div>${bars(countBy('area'))}</div>
-    <div class="chart-section"><div class="chart-title">By discharge status</div>${bars(countBy('dischargeStatus'))}</div>
-    <div class="chart-section"><div class="chart-title">By admission type</div>${bars(countBy('admType'))}</div>
-    <div class="chart-section"><div class="chart-title">By admitted from</div>${bars(countBy('admFrom'))}</div>
-    <div class="chart-section"><div class="chart-title">By specialty (top 8)</div>${bars(countBy('specialty'))}</div>
-    <div class="chart-section"><div class="chart-title">By sex</div>${bars(countBy('sex'))}</div>
-  </div>
-  <div class="chart-section" style="margin-top:0">
-    <div class="chart-title" style="margin-bottom:12px">Active patients — live days in ICU</div>
-    ${patients.filter(p=>!p.dischargeStatus&&p.doa).length ?
-      `<table style="width:100%;font-size:12.5px;border-collapse:collapse">
-        <thead><tr>
-          <th style="text-align:left;padding:6px 10px;background:var(--surface2);font-size:11px;font-weight:700;color:var(--text2);border-bottom:1px solid var(--border)">File #</th>
-          <th style="text-align:left;padding:6px 10px;background:var(--surface2);font-size:11px;font-weight:700;color:var(--text2);border-bottom:1px solid var(--border)">Name</th>
-          <th style="text-align:left;padding:6px 10px;background:var(--surface2);font-size:11px;font-weight:700;color:var(--text2);border-bottom:1px solid var(--border)">DOA</th>
-          <th style="text-align:left;padding:6px 10px;background:var(--surface2);font-size:11px;font-weight:700;color:var(--text2);border-bottom:1px solid var(--border)">Area</th>
-          <th style="text-align:left;padding:6px 10px;background:var(--surface2);font-size:11px;font-weight:700;color:var(--text2);border-bottom:1px solid var(--border)">Days in ICU</th>
-        </tr></thead>
-        <tbody>${patients.filter(p=>!p.dischargeStatus&&p.doa).sort((a,b)=>daysBetween(b.doa,today())-daysBetween(a.doa,today())).map(p=>`
-          <tr>
-            <td style="padding:7px 10px;border-bottom:1px solid var(--border);font-weight:600;color:var(--blue-text);font-family:monospace">${esc(p.fileNo)}</td>
-            <td style="padding:7px 10px;border-bottom:1px solid var(--border)">${esc(p.name)}</td>
-            <td style="padding:7px 10px;border-bottom:1px solid var(--border)">${p.doa}</td>
-            <td style="padding:7px 10px;border-bottom:1px solid var(--border)">${p.area||''}</td>
-            <td style="padding:7px 10px;border-bottom:1px solid var(--border)"><span class="days-active">${daysBetween(p.doa,today())}d</span></td>
-          </tr>`).join('')}
-        </tbody>
-      </table>` : '<div style="color:var(--text3);font-size:13px">No active patients.</div>'}
-  </div>`;
 }
 
-// ---------- EXPORT ----------
+// EXPORT
 function exportCSV() {
-  const data = getFiltered();
-  if (!data.length) { showToast('No data to export.', true); return; }
-  const hdr = ['File No','Name','Age','Sex','DOA','Area','Adm Type','Adm From','Specialty','Diagnosis','Mortality%','Days/LOS','DOD','Discharge Status','Other Hospital'];
-  const rows = data.map(p => {
-    let dl = '';
-    if (!p.dischargeStatus && p.doa) dl = daysBetween(p.doa,today())+'d active';
-    else if (p.doa && p.dod) dl = daysBetween(p.doa,p.dod)+'d LOS';
-    return [p.fileNo,p.name,p.age,p.sex,p.doa,p.area,p.admType,p.admFrom,p.specialty,p.diagnosis,p.mortality,dl,p.dod,p.dischargeStatus||'Active',p.otherHospital].map(v=>'"'+String(v||'').replace(/"/g,'""')+'"').join(',');
-  });
+  const headers = ['File#','Name','Age','Sex','DOA','Area','Adm.Type','Adm.From','Specialty','Diagnosis','Mortality%','LOS','DOD','DischargeStatus','OtherHospital','Notes'];
+  const rows = allPatients.map(p => [
+    p.fileNo,p.name,p.age,p.sex,p.doa,p.area,p.admType,p.admFrom,p.specialty,p.diagnosis,p.mortality,calcLOS(p.doa,p.dod),p.dod,p.dischargeStatus,p.otherHospital,p.notes
+  ].map(v => `"${(v||'').toString().replace(/"/g,'""')}"`));
+  const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
   const a = document.createElement('a');
-  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent([hdr.join(','),...rows].join('\n'));
-  a.download = 'ICU_patients_' + today() + '.csv';
+  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+  a.download = 'icu-patients.csv';
   a.click();
 }
 
-// ---------- UI HELPERS ----------
-function showLoading(msg) { document.getElementById('loadingMsg').textContent=msg||'Loading…'; document.getElementById('loadingOverlay').classList.add('show'); }
-function hideLoading() { document.getElementById('loadingOverlay').classList.remove('show'); }
-let toastTimer;
-function showToast(msg, err) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.className = 'toast show' + (err?' err':'');
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(()=>t.className='toast', 3000);
-}
-
-// pre-fill backend URL if saved
-window.addEventListener('load', () => {
-  const saved = localStorage.getItem('icuBackendUrl');
-  if (saved) document.getElementById('backendUrl').value = saved;
-});
+// CLOSE OVERLAYS ON BACKDROP
+document.getElementById('patient-overlay').addEventListener('click', function(e){ if(e.target===this) closePatientModal(); });
+document.getElementById('confirm-overlay').addEventListener('click', function(e){ if(e.target===this) closeConfirm(); });
 </script>
 </body>
 </html>
